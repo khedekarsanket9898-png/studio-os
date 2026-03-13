@@ -528,12 +528,17 @@ input[type=range]::-webkit-slider-thumb {
   <div class="auth-title">STUDIO OS</div>
   <div class="auth-studio">TATTOO CREATORS</div>
   <div class="auth-sub" style="margin-top:8px">Viman Nagar, Pune · +91 96651 88935</div>
-  <div style="margin:40px 0 20px">
+  <div style="margin:40px 0 12px">
     <button class="btn btn-gold" style="max-width:280px" onclick="signIn()">
       🔐 Sign in with Google
     </button>
   </div>
-  <div style="font-size:12px;color:var(--gray)">Your data stays in your Google Drive</div>
+  <div id="offline-btn" style="display:none">
+    <button class="btn btn-outline" style="max-width:280px;font-size:13px" onclick="skipAuth()">
+      📱 Use Offline (Local Only)
+    </button>
+  </div>
+  <div style="font-size:12px;color:var(--gray);margin-top:16px">Your data stays in your Google Drive</div>
 </div>
 
 <!-- MAIN APP (hidden until auth) -->
@@ -929,8 +934,7 @@ input[type=range]::-webkit-slider-thumb {
 </div><!-- end main-app -->
 </div><!-- end app -->
 
-<!-- GOOGLE API -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 
 <script>
 // ============================================================
@@ -972,25 +976,32 @@ const LEGAL_TEXT = `1. I acknowledge I am over the age of 18 and that I have tru
 // ============================================================
 // GOOGLE AUTH
 // ============================================================
+window.addEventListener('load', () => {
+  // Check if returning from OAuth redirect
+  const params = new URLSearchParams(window.location.hash.replace('#','?'));
+  const token = params.get('access_token');
+  if (token) {
+    accessToken = token;
+    // Clean URL
+    history.replaceState(null, '', window.location.pathname);
+    onSignedIn();
+    return;
+  }
+  // Show offline button after short delay
+  setTimeout(() => {
+    document.getElementById('offline-btn').style.display = 'block';
+  }, 800);
+});
+
 function signIn() {
-  google.accounts.id.initialize({
-    client_id: CLIENT_ID,
-    callback: handleCredential
-  });
-
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: (resp) => {
-      if (resp.error) { showToast('Auth failed: ' + resp.error); return; }
-      accessToken = resp.access_token;
-      onSignedIn();
-    }
-  });
-  tokenClient.requestAccessToken();
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${CLIENT_ID}` +
+    `&redirect_uri=${encodeURIComponent(window.location.href.split('?')[0].split('#')[0])}` +
+    `&response_type=token` +
+    `&scope=${encodeURIComponent(SCOPES)}` +
+    `&prompt=select_account`;
+  window.location.href = authUrl;
 }
-
-function handleCredential(resp) {}
 
 function onSignedIn() {
   document.getElementById('auth-screen').style.display = 'none';
@@ -999,17 +1010,6 @@ function onSignedIn() {
   initApp();
   showToast('✅ Signed in & Drive connected');
 }
-
-// For demo: allow skip auth
-window.addEventListener('load', () => {
-  // Auto-launch without auth for local testing
-  setTimeout(() => {
-    if (!accessToken) {
-      // Still show the app with local storage
-      document.getElementById('auth-screen').innerHTML += `<br><button class="btn btn-outline" style="max-width:200px;margin-top:12px;font-size:12px" onclick="skipAuth()">Use Offline (Local Only)</button>`;
-    }
-  }, 500);
-});
 
 function skipAuth() {
   document.getElementById('auth-screen').style.display = 'none';
