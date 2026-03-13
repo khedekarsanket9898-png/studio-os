@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio OS — Tattoo Creators</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d0f;
+  --card: #1a1a1e;
+  --card2: #222226;
+  --gold: #FFC107;
+  --gold2: #ffab00;
+  --white: #f0f0f2;
+  --gray: #6b6b75;
+  --gray2: #3a3a42;
+  --red: #ff4d4d;
+  --green: #4caf82;
+  --blue: #4d9fff;
+  --purple: #9b7fe8;
+  --orange: #ff8c42;
+  --border: rgba(255,255,255,0.06);
+  --radius: 20px;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --display: 'Bebas Neue', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--font);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* NOISE TEXTURE */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--gray2); border-radius: 4px; }
+
+/* LAYOUT */
+#app { position: relative; z-index: 1; }
+
+/* VIEWS */
+.view { display: none; min-height: 100vh; }
+.view.active { display: block; }
+
+/* NAV */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,13,15,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 56px;
+  display: flex; align-items: center; gap: 12px;
+}
+.nav-back {
+  background: none; border: none; color: var(--gold);
+  font-family: var(--font); font-size: 14px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 8px;
+  transition: background 0.2s;
+}
+.nav-back:hover { background: rgba(255,193,7,0.1); }
+.nav-title {
+  font-family: var(--display);
+  font-size: 22px; letter-spacing: 1px;
+  color: var(--white);
+}
+
+/* DASHBOARD */
+#dashboard { padding: 0 0 40px; }
+
+.dash-header {
+  padding: 50px 20px 30px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.dash-greeting { font-size: 13px; color: var(--gray); font-weight: 500; margin-bottom: 4px; }
+.dash-title { font-family: var(--display); font-size: 42px; letter-spacing: 2px; line-height: 1; }
+.dash-logo {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+
+/* HERO CARD */
+.hero-card {
+  margin: 0 16px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.hero-card:hover { transform: translateY(-2px); border-color: rgba(255,193,7,0.3); }
+.hero-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: rgba(77,159,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; margin-bottom: 14px;
+}
+.hero-label { font-size: 18px; font-weight: 700; }
+.hero-sub { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+/* BENTO GRID */
+.bento-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 16px;
+}
+.bento-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+  min-height: 140px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.bento-card:hover { transform: translateY(-2px); }
+.bento-icon { font-size: 28px; margin-bottom: 16px; }
+.bento-title { font-size: 17px; font-weight: 700; }
+
+/* PAGE CONTENT */
+.page-content { padding: 20px 16px 80px; max-width: 600px; margin: 0 auto; }
+
+/* CARDS */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  color: var(--gold); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* FORM ELEMENTS */
+.field { margin-bottom: 14px; }
+.field label { font-size: 11px; font-weight: 600; color: var(--gray); letter-spacing: 0.8px; display: block; margin-bottom: 6px; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 12px 14px;
+  background: var(--card2); border: 1px solid var(--gray2);
+  border-radius: 12px; color: var(--white);
+  font-family: var(--font); font-size: 14px;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); }
+.field textarea { resize: vertical; min-height: 80px; }
+.field select option { background: var(--card2); }
+
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+/* BUTTONS */
+.btn {
+  padding: 14px 20px; border-radius: 14px; border: none;
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; width: 100%;
+  letter-spacing: 0.5px;
+}
+.btn-gold { background: var(--gold); color: #000; }
+.btn-gold:hover { background: var(--gold2); transform: translateY(-1px); }
+.btn-dark { background: var(--card2); color: var(--gold); border: 1px solid rgba(255,193,7,0.3); }
+.btn-dark:hover { background: rgba(255,193,7,0.1); }
+.btn-red { background: var(--red); color: #fff; }
+.btn-outline { background: transparent; color: var(--white); border: 1px solid var(--gray2); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* SEGMENT CONTROL */
+.segment {
+  display: flex; background: var(--card2);
+  border-radius: 12px; padding: 4px; gap: 4px;
+  margin-bottom: 20px;
+}
+.seg-btn {
+  flex: 1; padding: 8px; border: none; border-radius: 9px;
+  background: transparent; color: var(--gray);
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.seg-btn.active { background: var(--card); color: var(--white); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+
+/* PRIORITY TAGS */
+.priority-group { display: flex; gap: 8px; }
+.priority-btn {
+  flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--gray2);
+  background: transparent; color: var(--gray);
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.priority-btn.hot.active { background: rgba(255,77,77,0.15); border-color: var(--red); color: var(--red); }
+.priority-btn.warm.active { background: rgba(255,140,66,0.15); border-color: var(--orange); color: var(--orange); }
+.priority-btn.cold.active { background: rgba(77,159,255,0.15); border-color: var(--blue); color: var(--blue); }
+
+/* PRESETS */
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.preset-btn {
+  padding: 6px 14px; border-radius: 8px; border: none;
+  background: rgba(255,193,7,0.12); color: var(--gold);
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.preset-btn:hover { background: rgba(255,193,7,0.25); }
+
+/* SLIDER */
+.slider-wrap { margin: 8px 0; }
+.slider-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+.slider-val { color: var(--gold); font-weight: 700; }
+input[type=range] {
+  width: 100%; -webkit-appearance: none; height: 4px;
+  border-radius: 2px; background: var(--gray2); outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--gold); cursor: pointer;
+  box-shadow: 0 0 8px rgba(255,193,7,0.4);
+}
+
+/* STAT CARDS */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px;
+}
+.stat-label { font-size: 11px; color: var(--gray); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.stat-value { font-size: 24px; font-weight: 700; }
+
+/* TRANSACTION ROW */
+.tx-row {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card); border-radius: 14px; padding: 14px;
+  margin-bottom: 10px; border: 1px solid var(--border);
+}
+.tx-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(76,175,130,0.12);
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  flex-shrink: 0;
+}
+.tx-name { font-size: 14px; font-weight: 600; }
+.tx-desc { font-size: 11px; color: var(--gray); margin-top: 2px; }
+.tx-amount { font-size: 15px; font-weight: 700; color: var(--green); margin-left: auto; text-align: right; }
+.tx-date { font-size: 11px; color: var(--gray); }
+
+/* ENQUIRY ROW */
+.enq-row {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px; margin-bottom: 10px;
+}
+.enq-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.enq-name { font-size: 15px; font-weight: 600; }
+.enq-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 9px;
+  border-radius: 20px; letter-spacing: 0.5px;
+}
+.badge-hot { background: rgba(255,77,77,0.15); color: var(--red); }
+.badge-warm { background: rgba(255,140,66,0.15); color: var(--orange); }
+.badge-cold { background: rgba(77,159,255,0.15); color: var(--blue); }
+.badge-converted { background: rgba(76,175,130,0.15); color: var(--green); }
+.enq-meta { font-size: 12px; color: var(--gray); display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* APPOINTMENT CARD */
+.appt-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px; margin-bottom: 10px;
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.appt-time {
+  font-size: 13px; font-weight: 700; color: var(--purple);
+  min-width: 55px; text-align: center;
+}
+.appt-line { width: 2px; background: rgba(155,127,232,0.3); border-radius: 2px; align-self: stretch; }
+.appt-name { font-size: 14px; font-weight: 600; }
+.appt-note { font-size: 12px; color: var(--gray); margin-top: 3px; }
+
+/* SECTION HEADER */
+.section-hdr {
+  font-size: 12px; font-weight: 700; color: var(--gray);
+  letter-spacing: 1px; padding: 16px 0 8px; text-transform: uppercase;
+}
+
+/* TOGGLE */
+.toggle-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label { font-size: 14px; }
+.toggle {
+  width: 44px; height: 26px; border-radius: 13px;
+  background: var(--gray2); position: relative; cursor: pointer;
+  transition: background 0.2s; border: none; flex-shrink: 0;
+}
+.toggle.on { background: var(--green); }
+.toggle::after {
+  content: ''; position: absolute;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: white; top: 3px; left: 3px;
+  transition: transform 0.2s;
+}
+.toggle.on::after { transform: translateX(18px); }
+
+/* SIGNATURE PAD */
+#sig-canvas {
+  width: 100%; height: 150px;
+  background: white; border-radius: 12px;
+  cursor: crosshair; touch-action: none;
+  border: 2px solid var(--gray2);
+}
+
+/* PRICE DISPLAY */
+.price-display {
+  background: rgba(255,193,7,0.08);
+  border: 1px solid rgba(255,193,7,0.3);
+  border-radius: 16px; padding: 20px; margin: 16px 0;
+}
+.price-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; }
+.price-row:last-child { margin-bottom: 0; }
+.price-total { font-size: 36px; font-weight: 700; color: var(--gold); font-family: var(--display); letter-spacing: 1px; }
+
+/* SIZE PREVIEW */
+.size-preview {
+  height: 180px; display: flex; align-items: center; justify-content: center;
+  background: var(--card2); border-radius: 14px; margin-bottom: 16px;
+  position: relative; overflow: hidden;
+}
+.preview-box {
+  border: 2px dashed rgba(255,193,7,0.5);
+  background: rgba(255,193,7,0.04);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--gold);
+  transition: all 0.3s;
+  min-width: 40px; min-height: 40px;
+}
+
+/* PAYMENT SPLIT */
+.pay-field {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--card2); border-radius: 12px; padding: 12px 14px;
+  margin-bottom: 10px; border: 1px solid var(--gray2);
+}
+.pay-icon { font-size: 18px; flex-shrink: 0; }
+.pay-input {
+  flex: 1; background: none; border: none;
+  color: var(--white); font-family: var(--font); font-size: 14px;
+  outline: none;
+}
+
+/* BALANCE ROW */
+.balance-row {
+  display: flex; justify-content: space-between;
+  padding: 14px; background: var(--card2);
+  border-radius: 12px; margin-top: 10px;
+}
+
+/* GALLERY */
+.gallery-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
+  margin-top: 10px;
+}
+.gallery-item {
+  aspect-ratio: 1; border-radius: 8px; overflow: hidden;
+  cursor: pointer; position: relative;
+}
+.gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+.gallery-empty {
+  grid-column: 1/-1; text-align: center;
+  padding: 60px 20px; color: var(--gray);
+}
+.gallery-empty-icon { font-size: 50px; opacity: 0.3; margin-bottom: 12px; }
+
+/* FULL IMAGE OVERLAY */
+#img-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.95); z-index: 200;
+  align-items: center; justify-content: center; flex-direction: column;
+}
+#img-overlay.show { display: flex; }
+#img-overlay img { max-width: 90vw; max-height: 80vh; object-fit: contain; border-radius: 12px; }
+#img-overlay-close {
+  position: absolute; top: 20px; right: 20px;
+  background: none; border: none; color: white; font-size: 30px; cursor: pointer;
+}
+
+/* CALENDAR */
+.cal-day-header {
+  font-family: var(--display); font-size: 18px; letter-spacing: 1px;
+  color: var(--gold); padding: 16px 0 8px;
+}
+
+/* TERMS */
+.terms-text {
+  font-size: 12px; color: var(--gray); line-height: 1.8;
+  background: var(--card2); border-radius: 12px; padding: 16px;
+  max-height: 200px; overflow-y: auto;
+}
+
+/* TOAST */
+#toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+  background: var(--card); border: 1px solid var(--gold);
+  color: var(--white); padding: 12px 24px; border-radius: 30px;
+  font-size: 13px; font-weight: 600; z-index: 999;
+  transition: transform 0.3s; pointer-events: none;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* REPORT CARDS */
+.report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.report-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px;
+}
+.report-icon { font-size: 20px; margin-bottom: 10px; }
+.report-value { font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.report-label { font-size: 11px; color: var(--gray); }
+
+/* STYLE PICKER */
+.style-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.style-chip {
+  padding: 8px 16px; border-radius: 20px;
+  border: 1px solid var(--gray2); background: var(--card2);
+  color: var(--gray); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+}
+.style-chip.selected { border-color: var(--gold); background: rgba(255,193,7,0.12); color: var(--gold); }
+
+/* GOOGLE AUTH */
+#auth-screen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 40px 20px; text-align: center;
+}
+.auth-logo { font-size: 60px; margin-bottom: 20px; }
+.auth-title { font-family: var(--display); font-size: 48px; letter-spacing: 3px; margin-bottom: 8px; }
+.auth-sub { font-size: 14px; color: var(--gray); margin-bottom: 40px; }
+.auth-studio { font-size: 12px; color: var(--gold); letter-spacing: 2px; font-weight: 600; }
+
+/* ANIMATIONS */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.bento-card { animation: fadeUp 0.4s ease both; }
+.bento-card:nth-child(1) { animation-delay: 0.05s; }
+.bento-card:nth-child(2) { animation-delay: 0.1s; }
+.bento-card:nth-child(3) { animation-delay: 0.15s; }
+.bento-card:nth-child(4) { animation-delay: 0.2s; }
+.bento-card:nth-child(5) { animation-delay: 0.25s; }
+.bento-card:nth-child(6) { animation-delay: 0.3s; }
+
+/* MOBILE */
+@media (max-width: 400px) {
+  .dash-title { font-size: 34px; }
+  .bento-title { font-size: 15px; }
+}
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--gray); }
+.empty-icon { font-size: 48px; opacity: 0.3; margin-bottom: 12px; }
+
+/* CHECKLIST ITEM */
+.check-item {
+  background: var(--card2); border-radius: 12px; padding: 14px;
+  margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+}
+
+/* INVOICE PREVIEW */
+.invoice-preview {
+  background: white; color: #111; border-radius: 16px;
+  padding: 24px; margin-top: 16px; font-size: 13px;
+}
+.inv-header { background: #1a1a1e; color: white; margin: -24px -24px 20px; padding: 20px 24px; border-radius: 16px 16px 0 0; }
+.inv-title { font-family: var(--display); font-size: 28px; letter-spacing: 2px; color: white; }
+.inv-sub { color: #FFC107; font-size: 12px; font-weight: 600; }
+.inv-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+.inv-total { font-size: 28px; font-weight: 700; color: #1a1a1e; }
+.inv-promo { text-align: center; padding: 12px; background: #fff8e1; border-radius: 8px; margin-top: 12px; font-weight: 700; color: #e65100; font-size: 12px; }
+
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* GDRIVE STATUS */
+.sync-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; padding: 4px 10px;
+  border-radius: 20px; background: rgba(76,175,130,0.12);
+  color: var(--green);
+}
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-logo">🖤</div>
+  <div class="auth-title">STUDIO OS</div>
+  <div class="auth-studio">TATTOO CREATORS</div>
+  <div class="auth-sub" style="margin-top:8px">Viman Nagar, Pune · +91 96651 88935</div>
+  <div style="margin:40px 0 20px">
+    <button class="btn btn-gold" style="max-width:280px" onclick="signIn()">
+      🔐 Sign in with Google
+    </button>
+  </div>
+  <div style="font-size:12px;color:var(--gray)">Your data stays in your Google Drive</div>
+</div>
+
+<!-- MAIN APP (hidden until auth) -->
+<div id="main-app" style="display:none">
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- IMAGE OVERLAY -->
+<div id="img-overlay">
+  <button id="img-overlay-close" onclick="closeImgOverlay()">✕</button>
+  <img id="overlay-img" src="" alt="">
+</div>
+
+<!-- ==================== DASHBOARD ==================== -->
+<div class="view active" id="view-dashboard">
+  <div id="dashboard">
+    <div class="dash-header">
+      <div>
+        <div class="dash-greeting" id="greeting">Good Morning,</div>
+        <div class="dash-title">STUDIO OS</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <div class="dash-logo">🎨</div>
+        <div class="sync-badge"><div class="sync-dot"></div>Drive Synced</div>
+      </div>
+    </div>
+
+    <!-- Hero: Price Calculator -->
+    <div class="hero-card" onclick="showView('calc')">
+      <div>
+        <div class="hero-icon">₹</div>
+        <div class="hero-label">Price Calculator</div>
+        <div class="hero-sub">Quickly estimate tattoo cost</div>
+      </div>
+      <div style="color:var(--gray);font-size:20px">›</div>
+    </div>
+
+    <!-- Bento Grid -->
+    <div class="bento-grid">
+      <div class="bento-card" onclick="showView('enquiries')" style="border-top:3px solid var(--orange)">
+        <div class="bento-icon">📋</div>
+        <div class="bento-title">Enquiries</div>
+      </div>
+      <div class="bento-card" onclick="showView('book')" style="border-top:3px solid var(--purple)">
+        <div class="bento-icon">📅</div>
+        <div class="bento-title">Book</div>
+      </div>
+      <div class="bento-card" onclick="showView('schedule')" style="border-top:3px solid var(--red)">
+        <div class="bento-icon">🗓️</div>
+        <div class="bento-title">Schedule</div>
+      </div>
+      <div class="bento-card" onclick="showView('consent')" style="border-top:3px solid var(--green)">
+        <div class="bento-icon">✍️</div>
+        <div class="bento-title">Forms</div>
+      </div>
+      <div class="bento-card" onclick="showView('reports')" style="border-top:3px solid var(--blue)">
+        <div class="bento-icon">📊</div>
+        <div class="bento-title">Reports</div>
+      </div>
+      <div class="bento-card" onclick="showView('gallery')" style="border-top:3px solid #ff6b9d">
+        <div class="bento-icon">🖼️</div>
+        <div class="bento-title">Portfolio</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PRICE CALCULATOR ==================== -->
+<div class="view" id="view-calc">
+  <div class="nav">
+    <button class="nav-back" onclick="showView('dashboard')">‹ Back</button>
+    <span class="nav-title">PRICE CALCULATOR</span>
+  </div>
+  <div class="page-content">
+
+    <div class="size-preview">
+      <div class="preview-box" id="preview-box">?</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📐 DIMENSIONS</div>
+      <div class="row">
+        <div class="field"><label>HEIGHT (inches)</label><input type="number" id="calc-h" placeholder="0" oninput="calcUpdate()"></div>
+        <div class="field"><label>WIDTH (inches)</label><input type="number" id="calc-w" placeholder="0" oninput="calcUpdate()"></div>
+      </div>
+      <div class="card-title" style="margin-top:8px">⚡ QUICK PRESETS</div>
+      <div class="presets">
+        <button class="preset-btn" onclick="setCalcPreset(2,2)">2×2</button>
+        <button class="preset-btn" onclick="setCalcPreset(4,4)">4×4</button>
+        <button class="preset-btn" onclick="setCalcPreset(8,6)">A5</button>
+        <button class="preset-btn" onclick="setCalcPreset(12,8)">A4</button>
+        <button class="preset-btn" onclick="setCalcPreset(9,6)">Half Sleeve</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💰 PRICING</div>
+      <div class="field"><label>BASE RATE (₹/sq inch)</label><input type="number" id="calc-rate" value="1000" oninput="calcUpdate()"></div>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Discount</span><span class="slider-val" id="calc-disc-val">0%</span></div>
+        <input type="range" id="calc-disc" min="0" max="70" value="0" oninput="calcUpdate()">
+      </div>
+    </div>
+
+    <div class="price-display">
+      <div class="price-row"><span style="color:var(--gray)">Base Cost</span><span id="calc-base">₹0</span></div>
+      <div class="price-row" id="calc-min-row" style="display:none"><span style="color:var(--orange)">Min. Studio Charge</span><span style="color:var(--orange)">₹2,000</span></div>
+      <div class="divider"></div>
+      <div class="price-row"><span style="font-weight:700;font-size:16px">TOTAL QUOTE</span><div class="price-total" id="calc-total">₹2,000</div></div>
+    </div>
+
+    <button class="btn btn-dark" onclick="copyQuote()">📋 COPY QUOTE FOR WHATSAPP</button>
+  </div>
+</div>
+
+<!-- ==================== ENQUIRIES ==================== -->
+<div class="view" id="view-enquiries">
+  <div class="nav">
+    <button class="nav-back" onclick="showView('dashboard')">‹ Back</button>
+    <span class="nav-title">ENQUIRIES</span>
+    <button class="btn btn-gold" style="width:auto;padding:8px 16px;margin-left:auto;font-size:12px" onclick="showView('new-enquiry')">+ New</button>
+  </div>
+  <div class="page-content">
+    <div id="enq-list">
+      <div class="empty-state"><div class="empty-icon">📋</div><div>No enquiries yet</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== NEW ENQUIRY ==================== -->
+<div class="view" id="view-new-enquiry">
+  <div class="nav">
+    <button class="nav-back" onclick="showView('enquiries')">‹ Back</button>
+    <span class="nav-title">NEW ENQUIRY</span>
+  </div>
+  <div class="page-content">
+    <div class="card">
+      <div class="card-title">👤 CLIENT DETAILS</div>
+      <div class="field"><label>FULL NAME</label><input type="text" id="enq-name" placeholder="Client name"></div>
+      <div class="field"><label>PHONE NUMBER</label><input type="tel" id="enq-phone" placeholder="+91 XXXXX XXXXX"></div>
+      <div class="field"><label>LEAD SOURCE</label>
+        <select id="enq-source">
+          <option>Instagram</option><option>WhatsApp</option><option>Walk-in</option><option>Google</option><option>Referral</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔥 LEAD PRIORITY</div>
+      <div class="priority-group">
+        <button class="priority-btn hot" id="p-hot" onclick="setPriority('Hot')">🔥 Hot</button>
+        <button class="priority-btn warm active" id="p-warm" onclick="setPriority('Warm')">⚡ Warm</button>
+        <button class="priority-btn cold" id="p-cold" onclick="setPriority('Cold')">❄️ Cold</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎨 TATTOO DESIGN</div>
+      <div class="field"><label>STYLE</label>
+        <div class="style-grid" id="enq-style-grid"></div>
+      </div>
+      <div class="field"><label>PLACEMENT</label>
+        <select id="enq-placement">
+          <option>Forearm</option><option>Arm</option><option>Chest</option><option>Back</option><option>Leg</option><option>Sleeve</option><option>Hand</option><option>Neck</option>
+        </select>
+      </div>
+      <div class="field"><label>BRIEF IDEA</label><textarea id="enq-idea" placeholder="Describe the tattoo idea..."></textarea></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📐 SIZE & ESTIMATE</div>
+      <div class="presets" id="enq-presets">
+        <button class="preset-btn" onclick="setEnqPreset(2,2)">2×2</button>
+        <button class="preset-btn" onclick="setEnqPreset(3,3)">3×3</button>
+        <button class="preset-btn" onclick="setEnqPreset(4,4)">4×4</button>
+        <button class="preset-btn" onclick="setEnqPreset(6,4)">6×4</button>
+        <button class="preset-btn" onclick="setEnqPreset(9,6)">Half Sleeve</button>
+        <button class="preset-btn" onclick="setEnqPreset(11,8)">A4</button>
+      </div>
+      <div class="row">
+        <div class="field"><label>HEIGHT (in)</label><input type="number" id="enq-h" placeholder="0" oninput="enqCalc()"></div>
+        <div class="field"><label>WIDTH (in)</label><input type="number" id="enq-w" placeholder="0" oninput="enqCalc()"></div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Discount</span><span class="slider-val" id="enq-disc-val">0%</span></div>
+        <input type="range" id="enq-disc" min="0" max="70" value="0" step="5" oninput="enqCalc()">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(255,193,7,0.08);border-radius:12px;margin-top:8px">
+        <span style="font-weight:600">Estimated Cost</span>
+        <span style="font-size:22px;font-weight:700;color:var(--gold)" id="enq-cost">₹2,000</span>
+      </div>
+    </div>
+
+    <button class="btn btn-gold" onclick="saveEnquiry()" id="enq-save-btn">SAVE ENQUIRY</button>
+  </div>
+</div>
+
+<!-- ==================== BOOK APPOINTMENT ==================== -->
+<div class="view" id="view-book">
+  <div class="nav">
+    <button class="nav-back" onclick="showView('dashboard')">‹ Back</button>
+    <span class="nav-title">BOOK SESSION</span>
+  </div>
+  <div class="page-content">
+    <div class="card">
+      <div class="card-title">📋 IMPORT FROM ENQUIRIES</div>
+      <div class="field"><label>SELECT LEAD</label>
+        <select id="book-lead" onchange="fillFromEnquiry()">
+          <option value="">New Client (Manual)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📅 SESSION SCHEDULE</div>
+      <div class="field"><label>CLIENT NAME</label><input type="text" id="book-name" placeholder="Client name"></div>
+      <div class="field"><label>DATE & TIME</label><input type="datetime-local" id="book-date"></div>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Duration</span><span class="slider-val" id="book-dur-val">3 Hours</span></div>
+        <input type="range" id="book-dur" min="1" max="10" value="3" step="0.5" oninput="document.getElementById('book-dur-val').textContent=this.value+' Hours'">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎨 TATTOO DETAILS</div>
+      <div class="field"><label>STYLE</label>
+        <select id="book-style"></select>
+      </div>
+      <div class="field"><label>NOTES</label><textarea id="book-note" placeholder="Specific instructions..."></textarea></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💳 BOOKING DEPOSIT</div>
+      <div class="field"><label>TOTAL QUOTE (₹)</label><input type="number" id="book-quote" placeholder="0"></div>
+      <div class="section-hdr">ADVANCE RECEIVED (SPLIT)</div>
+      <div class="pay-field"><span class="pay-icon">💵</span><input class="pay-input" type="number" id="book-cash" placeholder="Cash Advance" oninput="bookCalc()"></div>
+      <div class="pay-field"><span class="pay-icon">📱</span><input class="pay-input" type="number" id="book-upi" placeholder="Online / UPI" oninput="bookCalc()"></div>
+      <div class="pay-field"><span class="pay-icon">💳</span><input class="pay-input" type="number" id="book-card" placeholder="Card Advance" oninput="bookCalc()"></div>
+      <div class="balance-row">
+        <span style="font-size:13px;font-weight:600">Total Advance</span>
+        <span style="font-size:20px;font-weight:700;color:var(--green)" id="book-total-adv">₹0</span>
+      </div>
+    </div>
+
+    <button class="btn btn-gold" onclick="confirmBooking()" style="background:var(--orange);color:white">📅 CONFIRM BOOKING</button>
+  </div>
+</div>
+
+<!-- ==================== SCHEDULE ==================== -->
+<div class="view" id="view-schedule">
+  <div class="nav">
+    <button class="nav-back" onclick="showView('dashboard')">‹ Back</button>
+    <span class="nav-title">SCHEDULE</span>
+  </div>
+  <div class="page-content">
+    <div class="card">
+      <input type="date" id="sched-date" onchange="renderSchedule()" style="background:none;border:none;color:var(--white);font-family:var(--font);font-size:16px;font-weight:700;width:100%;outline:none">
+    </div>
+    <div class="stat-grid" id="sched-stats">
+      <div class="stat-card">
+        <div class="stat-label">📅 Bookings</div>
+        <div class="stat-value" id="sched-count" style="color:var(--purple)">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">💰 Revenue</div>
+        <div class="stat-value" id="sched-rev" style="color:var(--green)">₹0</div>
+      </div>
+    </div>
+    <div id="sched-list"></div>
+  </div>
+</div>
+
+<!-- ==================== CONSENT & BILLING ==================== -->
+<div class="view" id="view-consent">
+  <div class="nav">
+    <button class="nav-back" onclick="showView('dashboard')">‹ Back</button>
+    <span class="nav-title">CONSENT & BILLING</span>
+  </div>
+  <div class="page-content">
+
+    <div class="card">
+      <div class="card-title">🔍 CLIENT PROFILE</div>
+      <div class="field"><label>SEARCH BY PHONE (AUTO-FILL)</label><input type="tel" id="con-phone" placeholder="+91 XXXXX XXXXX" oninput="autoFillConsent()"></div>
+      <div class="field"><label>FULL NAME</label><input type="text" id="con-name" placeholder="Full name"></div>
+      <div class="field"><label>EMAIL</label><input type="email" id="con-email" placeholder="email@example.com"></div>
+      <div class="field"><label>INSTAGRAM</label><input type="text" id="con-ig" placeholder="@handle"></div>
+      <div class="row">
+        <div class="field"><label>GENDER</label>
+          <select id="con-gender"><option>Male</option><option>Female</option><option>Other</option></select>
+        </div>
+        <div class="field"><label>DATE OF BIRTH</label><input type="date" id="con-dob" onchange="calcConsentAge()"></div>
+      </div>
+      <div style="font-size:13px;color:var(--gray);padding:4px 0">Age: <strong id="con-age" style="color:var(--white)">—</strong></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎨 TATTOO DETAILS</div>
+      <div class="field"><label>STYLE</label><select id="con-style"></select></div>
+      <div class="field"><label>NOTES</label><textarea id="con-notes" placeholder="Specific instructions..."></textarea></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💰 QUOTATION & BILLING</div>
+      <div class="row">
+        <div class="field"><label>HEIGHT (in)</label><input type="number" id="con-h" placeholder="0" oninput="conCalc()"></div>
+        <div class="field"><label>WIDTH (in)</label><input type="number" id="con-w" placeholder="0" oninput="conCalc()"></div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-label"><span>Discount</span><span class="slider-val" id="con-disc-val">0%</span></div>
+        <input type="range" id="con-disc" min="0" max="70" value="0" oninput="conCalc()">
+      </div>
+      <div class="section-hdr">PAYMENT RECEIVED (SPLIT)</div>
+      <div class="pay-field"><span class="pay-icon">💵</span><input class="pay-input" type="number" id="con-cash" placeholder="Cash Amount" oninput="conCalc()"></div>
+      <div class="pay-field"><span class="pay-icon">📱</span><input class="pay-input" type="number" id="con-upi" placeholder="Online / UPI" oninput="conCalc()"></div>
+      <div class="pay-field"><span class="pay-icon">💳</span><input class="pay-input" type="number" id="con-card" placeholder="Card Payment" oninput="conCalc()"></div>
+      <div class="balance-row" style="margin-top:12px">
+        <div><div style="font-size:11px;color:var(--gray);margin-bottom:4px">TOTAL BILL</div><div style="font-size:22px;font-weight:700;color:var(--green)" id="con-total">₹0</div></div>
+        <div style="text-align:right"><div style="font-size:11px;color:var(--gray);margin-bottom:4px">PAID TODAY</div><div style="font-size:22px;font-weight:700;color:var(--blue)" id="con-paid">₹0</div></div>
+      </div>
+      <div id="con-balance-row" style="display:none;padding:12px;background:rgba(255,77,77,0.08);border-radius:10px;display:flex;justify-content:space-between;margin-top:8px">
+        <span>Remaining Balance</span><span style="color:var(--red);font-weight:700" id="con-balance">₹0</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🛡️ SAFETY CHECKLIST</div>
+      <div class="check-item"><span>Diabetes / Blood Pressure</span><button class="toggle" id="tog-diabetes" onclick="toggleBtn('tog-diabetes')"></button></div>
+      <div class="check-item"><span>Skin Conditions / Allergies</span><button class="toggle" id="tog-skin" onclick="toggleBtn('tog-skin')"></button></div>
+      <div class="check-item"><span>Pregnant / Nursing</span><button class="toggle" id="tog-pregnant" onclick="toggleBtn('tog-pregnant')"></button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📜 LEGAL CONSENT</div>
+      <div class="terms-text" id="terms-text"></div>
+      <div style="height:12px"></div>
+      <div class="check-item"><span>Stencil Approved</span><button class="toggle" id="tog-stencil" onclick="toggleBtn('tog-stencil')"></button></div>
+      <div class="check-item"><span>Accept Studio Terms</span><button class="toggle" id="tog-terms" onclick="toggleBtn('tog-terms')"></button></div>
+      <div style="height:14px"></div>
+      <div class="card-title">✍️ CLIENT SIGNATURE</div>
+      <canvas id="sig-canvas"></canvas>
+      <button class="btn btn-outline" style="margin-top:8px;font-size:12px;color:var(--red);border-color:var(--red)" onclick="clearSig()">Clear Signature</button>
+    </div>
+
+    <button class="btn btn-red" id="finalize-btn" onclick="finalizeSale()" disabled>✅ FINALIZE & GENERATE INVOICE</button>
+    
+    <!-- Invoice Preview -->
+    <div id="invoice-preview" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ==================== SALES REPORTS ==================== -->
+<div class="view" id="view-reports">
+  <div class="nav">
+    <button class="nav-back" onclick="showView('dashboard')">‹ Back</button>
+    <span class="nav-title">SALES REPORTS</span>
+    <button class="btn btn-dark" style="width:auto;padding:8px 14px;font-size:11px;margin-left:auto" onclick="exportCSV()">📤 Export</button>
+  </div>
+  <div class="page-content">
+    <div class="segment" id="report-segment">
+      <button class="seg-btn" onclick="setReportFrame('day')">Today</button>
+      <button class="seg-btn" onclick="setReportFrame('week')">Week</button>
+      <button class="seg-btn active" onclick="setReportFrame('month')">Month</button>
+      <button class="seg-btn" onclick="setReportFrame('all')">All Time</button>
+    </div>
+    <div class="report-grid" id="report-metrics"></div>
+    <div class="section-hdr">TRANSACTION HISTORY</div>
+    <div id="report-list"></div>
+  </div>
+</div>
+
+<!-- ==================== GALLERY ==================== -->
+<div class="view" id="view-gallery">
+  <div class="nav">
+    <button class="nav-back" onclick="showView('dashboard')">‹ Back</button>
+    <span class="nav-title">PORTFOLIO</span>
+    <label style="margin-left:auto;cursor:pointer">
+      <input type="file" id="gallery-upload" accept="image/*" style="display:none" onchange="addGalleryImage(event)">
+      <span style="font-size:24px;color:var(--gold)">＋</span>
+    </label>
+  </div>
+  <div class="page-content" style="padding-top:12px">
+    <div style="font-size:13px;color:var(--gray);margin-bottom:12px">Tap + to add · Long press to delete</div>
+    <div class="gallery-grid" id="gallery-grid">
+      <div class="gallery-empty">
+        <div class="gallery-empty-icon">📸</div>
+        <div>No images yet.<br>Tap + to add portfolio shots.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end main-app -->
+</div><!-- end app -->
+
+<!-- GOOGLE API -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const CLIENT_ID = '48772779298-mo2593cqgg1bmsip10ldhosjc0uj5f4j.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+const SHEET_NAME = 'StudioOS_Data';
+
+let accessToken = null;
+let sheetId = null;
+let tokenClient = null;
+
+// ============================================================
+// DATA STORE (localStorage as primary, GDrive as backup)
+// ============================================================
+let DB = {
+  enquiries: [],
+  appointments: [],
+  sales: [],
+  gallery: []
+};
+
+const BASE_RATE = 1000;
+const MIN_CHARGE = 2000;
+
+const STYLES = ["Realism","Portrait","Traditional","Neo-Traditional","Watercolor","Tribal","Blackwork","Japanese","Geometric","Dotwork","Script","Minimalist","Fine Line"];
+
+const LEGAL_TEXT = `1. I acknowledge I am over the age of 18 and that I have truthfully represented to my tattoo artist that the obtaining of a tattoo is my choice alone.
+2. If I have any condition that might affect the healing of this tattoo, I will advise my tattoo artist. I am not pregnant or nursing.
+3. I do not have medical or skin conditions such as but not limited to acne, scarring (keloid), eczema, psoriasis, freckles, moles or sunburn in the area to be tattooed.
+4. I acknowledge it is not reasonably possible for the representative and employees of this tattoo shop to determine whether I might have allergic to the pigment or process.
+5. I acknowledge that infection is always possible as a result of the obtaining of a tattoo. I received aftercare instructions.
+6. I realize that variations in colour and designs may exist between any tattoo as selected by me and as ultimately applied to my body.
+7. I understand that if I have skin treatments, laser hair removal, plastic surgery or other skin altering procedures, it may result in adverse changes to my tattoo.
+8. I acknowledge that a tattoo is a permanent change to my appearance and that no representation have been made to me as the ability to later change or remove my tattoo.
+9. I am giving authority to use my name, photo and social existence to promote by TATTOO CREATORS and tattoo studio.`;
+
+// ============================================================
+// GOOGLE AUTH
+// ============================================================
+function signIn() {
+  google.accounts.id.initialize({
+    client_id: CLIENT_ID,
+    callback: handleCredential
+  });
+
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: (resp) => {
+      if (resp.error) { showToast('Auth failed: ' + resp.error); return; }
+      accessToken = resp.access_token;
+      onSignedIn();
+    }
+  });
+  tokenClient.requestAccessToken();
+}
+
+function handleCredential(resp) {}
+
+function onSignedIn() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  loadFromLocal();
+  initApp();
+  showToast('✅ Signed in & Drive connected');
+}
+
+// For demo: allow skip auth
+window.addEventListener('load', () => {
+  // Auto-launch without auth for local testing
+  setTimeout(() => {
+    if (!accessToken) {
+      // Still show the app with local storage
+      document.getElementById('auth-screen').innerHTML += `<br><button class="btn btn-outline" style="max-width:200px;margin-top:12px;font-size:12px" onclick="skipAuth()">Use Offline (Local Only)</button>`;
+    }
+  }, 500);
+});
+
+function skipAuth() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  loadFromLocal();
+  initApp();
+  showToast('📱 Running in offline mode');
+}
+
+// ============================================================
+// LOCAL STORAGE
+// ============================================================
+function saveToLocal() {
+  localStorage.setItem('studioOS_db', JSON.stringify(DB));
+}
+function loadFromLocal() {
+  const raw = localStorage.getItem('studioOS_db');
+  if (raw) DB = JSON.parse(raw);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function initApp() {
+  setGreeting();
+  initStyleGrids();
+  initStyleSelects();
+  initSignaturePad();
+  initTerms();
+  setDefaultDate();
+  renderSchedule();
+  renderReports('month');
+  renderGallery();
+  renderEnquiries();
+  calcUpdate();
+}
+
+function setGreeting() {
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Good Morning,' : h < 17 ? 'Good Afternoon,' : 'Good Evening,';
+  document.getElementById('greeting').textContent = g;
+}
+
+function setDefaultDate() {
+  const now = new Date();
+  const tomorrow = new Date(now.getTime() + 86400000);
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('book-date').value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}T10:00`;
+  document.getElementById('sched-date').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+}
+
+function initStyleGrids() {
+  const g = document.getElementById('enq-style-grid');
+  let sel = 'Realism';
+  g.innerHTML = STYLES.map(s => `<div class="style-chip ${s===sel?'selected':''}" onclick="selectStyle('${s}')">${s}</div>`).join('');
+}
+
+function selectStyle(s) {
+  document.querySelectorAll('#enq-style-grid .style-chip').forEach(c => {
+    c.classList.toggle('selected', c.textContent === s);
+  });
+}
+
+function initStyleSelects() {
+  ['book-style','con-style'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = STYLES.map(s=>`<option>${s}</option>`).join('');
+  });
+}
+
+function initTerms() {
+  const el = document.getElementById('terms-text');
+  if(el) el.textContent = LEGAL_TEXT;
+}
+
+// ============================================================
+// VIEW NAVIGATION
+// ============================================================
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + name);
+  if(el) {
+    el.classList.add('active');
+    window.scrollTo(0,0);
+  }
+  // Refresh data views
+  if(name === 'enquiries') renderEnquiries();
+  if(name === 'book') populateLeadPicker();
+  if(name === 'schedule') renderSchedule();
+  if(name === 'reports') renderReports(currentFrame);
+  if(name === 'gallery') renderGallery();
+}
+
+// ============================================================
+// PRICE CALCULATOR
+// ============================================================
+function calcUpdate() {
+  const h = parseFloat(document.getElementById('calc-h').value) || 0;
+  const w = parseFloat(document.getElementById('calc-w').value) || 0;
+  const rate = parseFloat(document.getElementById('calc-rate').value) || BASE_RATE;
+  const disc = parseFloat(document.getElementById('calc-disc').value) || 0;
+  document.getElementById('calc-disc-val').textContent = disc + '%';
+
+  const area = h * w;
+  const base = area * rate;
+  const actual = Math.max(base, MIN_CHARGE);
+  const final = actual * (1 - disc/100);
+
+  document.getElementById('calc-base').textContent = '₹' + Math.round(base).toLocaleString('en-IN');
+  document.getElementById('calc-total').textContent = '₹' + Math.round(final).toLocaleString('en-IN');
+  document.getElementById('calc-min-row').style.display = (base < MIN_CHARGE && area > 0) ? 'flex' : 'none';
+
+  // Preview box
+  const box = document.getElementById('preview-box');
+  const scale = 14;
+  const bw = Math.max(w * scale, 40);
+  const bh = Math.max(h * scale, 40);
+  const maxDim = 160;
+  const ratio = Math.min(maxDim/bw, maxDim/bh, 1);
+  box.style.width = (bw*ratio) + 'px';
+  box.style.height = (bh*ratio) + 'px';
+  box.textContent = (h && w) ? `${h}×${w}"` : '?';
+}
+
+function setCalcPreset(h, w) {
+  document.getElementById('calc-h').value = h;
+  document.getElementById('calc-w').value = w;
+  calcUpdate();
+}
+
+function copyQuote() {
+  const total = document.getElementById('calc-total').textContent;
+  const h = document.getElementById('calc-h').value || '?';
+  const w = document.getElementById('calc-w').value || '?';
+  const text = `Tattoo Quote: ${total} for ${h}×${w} inch design. — Tattoo Creators, Pune`;
+  navigator.clipboard.writeText(text).then(() => showToast('📋 Quote copied for WhatsApp!'));
+}
+
+// ============================================================
+// ENQUIRIES
+// ============================================================
+let enquiryPriority = 'Warm';
+let enquiryStyle = 'Realism';
+
+function setPriority(p) {
+  enquiryPriority = p;
+  ['Hot','Warm','Cold'].forEach(x => {
+    const btn = document.getElementById('p-' + x.toLowerCase());
+    btn.classList.toggle('active', x === p);
+  });
+}
+
+function setEnqPreset(h, w) {
+  document.getElementById('enq-h').value = h;
+  document.getElementById('enq-w').value = w;
+  enqCalc();
+}
+
+function enqCalc() {
+  const h = parseFloat(document.getElementById('enq-h').value) || 0;
+  const w = parseFloat(document.getElementById('enq-w').value) || 0;
+  const disc = parseFloat(document.getElementById('enq-disc').value) || 0;
+  document.getElementById('enq-disc-val').textContent = disc + '%';
+  const cost = Math.max(h * w * BASE_RATE * (1 - disc/100), MIN_CHARGE);
+  document.getElementById('enq-cost').textContent = '₹' + Math.round(cost).toLocaleString('en-IN');
+}
+
+function saveEnquiry() {
+  const name = document.getElementById('enq-name').value.trim();
+  const phone = document.getElementById('enq-phone').value.trim();
+  if(!name) { showToast('Please enter client name'); return; }
+
+  const selStyle = document.querySelector('#enq-style-grid .style-chip.selected')?.textContent || 'Realism';
+  const h = document.getElementById('enq-h').value;
+  const w = document.getElementById('enq-w').value;
+  const disc = parseFloat(document.getElementById('enq-disc').value) || 0;
+  const cost = Math.max((parseFloat(h)||0)*(parseFloat(w)||0)*BASE_RATE*(1-disc/100), MIN_CHARGE);
+
+  const enq = {
+    id: Date.now().toString(),
+    name, phone,
+    source: document.getElementById('enq-source').value,
+    priority: enquiryPriority,
+    style: selStyle,
+    placement: document.getElementById('enq-placement').value,
+    idea: document.getElementById('enq-idea').value,
+    height: h, width: w,
+    discountPercent: disc,
+    finalCost: Math.round(cost).toString(),
+    date: new Date().toISOString(),
+    isConverted: false
+  };
+
+  DB.enquiries.unshift(enq);
+  saveToLocal();
+  showToast('✅ Enquiry saved!');
+  // Reset form
+  document.getElementById('enq-name').value = '';
+  document.getElementById('enq-phone').value = '';
+  showView('enquiries');
+}
+
+function renderEnquiries() {
+  const el = document.getElementById('enq-list');
+  if(!el) return;
+  if(DB.enquiries.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div>No enquiries yet</div></div>';
+    return;
+  }
+  el.innerHTML = DB.enquiries.map(e => `
+    <div class="enq-row">
+      <div class="enq-top">
+        <span class="enq-name">${e.name}</span>
+        <span class="enq-badge ${e.isConverted ? 'badge-converted' : 'badge-' + e.priority?.toLowerCase()}">
+          ${e.isConverted ? '✓ Converted' : e.priority || 'Warm'}
+        </span>
+      </div>
+      <div class="enq-meta">
+        <span>📞 ${e.phone || '—'}</span>
+        <span>🎨 ${e.style}</span>
+        <span>📐 ${e.height||'?'}×${e.width||'?'}"</span>
+        <span style="color:var(--gold)">₹${parseInt(e.finalCost||0).toLocaleString('en-IN')}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// BOOK APPOINTMENT
+// ============================================================
+function populateLeadPicker() {
+  const sel = document.getElementById('book-lead');
+  const unconverted = DB.enquiries.filter(e => !e.isConverted);
+  sel.innerHTML = '<option value="">New Client (Manual)</option>' +
+    unconverted.map(e => `<option value="${e.id}">${e.name} (${e.style})</option>`).join('');
+}
+
+function fillFromEnquiry() {
+  const id = document.getElementById('book-lead').value;
+  if(!id) return;
+  const e = DB.enquiries.find(x => x.id === id);
+  if(!e) return;
+  document.getElementById('book-name').value = e.name;
+  document.getElementById('book-style').value = e.style;
+  document.getElementById('book-quote').value = e.finalCost || '';
+  document.getElementById('book-note').value = e.idea || '';
+}
+
+function bookCalc() {
+  const total = (parseFloat(document.getElementById('book-cash').value)||0) +
+                (parseFloat(document.getElementById('book-upi').value)||0) +
+                (parseFloat(document.getElementById('book-card').value)||0);
+  document.getElementById('book-total-adv').textContent = '₹' + Math.round(total).toLocaleString('en-IN');
+}
+
+function confirmBooking() {
+  const name = document.getElementById('book-name').value.trim();
+  if(!name) { showToast('Please enter client name'); return; }
+
+  const adv = (parseFloat(document.getElementById('book-cash').value)||0) +
+              (parseFloat(document.getElementById('book-upi').value)||0) +
+              (parseFloat(document.getElementById('book-card').value)||0);
+
+  const appt = {
+    id: Date.now().toString(),
+    clientName: name,
+    date: document.getElementById('book-date').value,
+    style: document.getElementById('book-style').value,
+    note: document.getElementById('book-note').value,
+    quote: document.getElementById('book-quote').value,
+    bookingAmount: Math.round(adv).toString()
+  };
+
+  DB.appointments.push(appt);
+  DB.appointments.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+  // Mark enquiry converted
+  const leadId = document.getElementById('book-lead').value;
+  if(leadId) {
+    const enq = DB.enquiries.find(e => e.id === leadId);
+    if(enq) enq.isConverted = true;
+  }
+
+  saveToLocal();
+  showToast('✅ Booking confirmed!');
+  showView('schedule');
+}
+
+// ============================================================
+// SCHEDULE
+// ============================================================
+function renderSchedule() {
+  const selDate = document.getElementById('sched-date').value;
+  if(!selDate) return;
+
+  const selDay = new Date(selDate + 'T00:00:00');
+
+  // Stats for selected day
+  const dayAppts = DB.appointments.filter(a => {
+    const d = new Date(a.date);
+    return d.toDateString() === selDay.toDateString();
+  });
+  document.getElementById('sched-count').textContent = dayAppts.length;
+  const rev = dayAppts.reduce((s,a) => s + (parseInt(a.bookingAmount)||0), 0);
+  document.getElementById('sched-rev').textContent = '₹' + rev.toLocaleString('en-IN');
+
+  // 60-day upcoming
+  const end = new Date(selDay.getTime() + 60 * 86400000);
+  const upcoming = DB.appointments.filter(a => {
+    const d = new Date(a.date);
+    return d >= selDay && d <= end;
+  });
+
+  const grouped = {};
+  upcoming.forEach(a => {
+    const d = new Date(a.date);
+    const key = d.toDateString();
+    if(!grouped[key]) grouped[key] = [];
+    grouped[key].push(a);
+  });
+
+  const el = document.getElementById('sched-list');
+  if(Object.keys(grouped).length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><div>No appointments in next 60 days</div></div>';
+    return;
+  }
+
+  el.innerHTML = Object.entries(grouped).map(([dateStr, appts]) => {
+    const d = new Date(dateStr);
+    const today = new Date().toDateString();
+    const tomorrow = new Date(Date.now()+86400000).toDateString();
+    let label = d.toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short'}).toUpperCase();
+    if(dateStr === today) label = 'TODAY';
+    if(dateStr === tomorrow) label = 'TOMORROW';
+
+    return `<div class="cal-day-header">${label}</div>` +
+      appts.map(a => {
+        const t = new Date(a.date);
+        const time = t.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+        return `<div class="appt-card">
+          <div class="appt-time">${time}</div>
+          <div class="appt-line"></div>
+          <div><div class="appt-name">${a.clientName}</div><div class="appt-note">${a.style || ''} ${a.note ? '· ' + a.note : ''}</div></div>
+        </div>`;
+      }).join('');
+  }).join('');
+}
+
+// ============================================================
+// CONSENT & BILLING
+// ============================================================
+function autoFillConsent() {
+  const phone = document.getElementById('con-phone').value;
+  const match = DB.enquiries.find(e => e.phone === phone);
+  if(match) {
+    document.getElementById('con-name').value = match.name;
+    document.getElementById('con-style').value = match.style;
+    document.getElementById('con-h').value = match.height;
+    document.getElementById('con-w').value = match.width;
+    document.getElementById('con-disc').value = match.discountPercent;
+    document.getElementById('con-disc-val').textContent = match.discountPercent + '%';
+    conCalc();
+    showToast('✅ Auto-filled from enquiry!');
+  }
+}
+
+function calcConsentAge() {
+  const dob = document.getElementById('con-dob').value;
+  if(!dob) return;
+  const age = Math.floor((Date.now() - new Date(dob)) / (365.25*86400000));
+  document.getElementById('con-age').textContent = age + ' Years';
+}
+
+function conCalc() {
+  const h = parseFloat(document.getElementById('con-h').value)||0;
+  const w = parseFloat(document.getElementById('con-w').value)||0;
+  const disc = parseFloat(document.getElementById('con-disc').value)||0;
+  document.getElementById('con-disc-val').textContent = disc + '%';
+
+  const standard = h * w * BASE_RATE;
+  const final = Math.max(standard * (1 - disc/100), MIN_CHARGE);
+  const paid = (parseFloat(document.getElementById('con-cash').value)||0) +
+               (parseFloat(document.getElementById('con-upi').value)||0) +
+               (parseFloat(document.getElementById('con-card').value)||0);
+  const balance = final - paid;
+
+  document.getElementById('con-total').textContent = '₹' + Math.round(final).toLocaleString('en-IN');
+  document.getElementById('con-paid').textContent = '₹' + Math.round(paid).toLocaleString('en-IN');
+
+  const balRow = document.getElementById('con-balance-row');
+  if(balance > 0) {
+    balRow.style.display = 'flex';
+    document.getElementById('con-balance').textContent = '₹' + Math.round(balance).toLocaleString('en-IN');
+  } else {
+    balRow.style.display = 'none';
+  }
+
+  // Enable finalize if terms accepted
+  checkFinalizeBtn();
+}
+
+function toggleBtn(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('on');
+  checkFinalizeBtn();
+}
+
+function checkFinalizeBtn() {
+  const terms = document.getElementById('tog-terms').classList.contains('on');
+  const stencil = document.getElementById('tog-stencil').classList.contains('on');
+  document.getElementById('finalize-btn').disabled = !(terms && stencil);
+}
+
+function finalizeSale() {
+  const name = document.getElementById('con-name').value.trim() || 'Client';
+  const phone = document.getElementById('con-phone').value;
+  const h = document.getElementById('con-h').value;
+  const w = document.getElementById('con-w').value;
+  const disc = parseFloat(document.getElementById('con-disc').value)||0;
+  const style = document.getElementById('con-style').value;
+
+  const standard = (parseFloat(h)||0) * (parseFloat(w)||0) * BASE_RATE;
+  const final = Math.max(standard * (1 - disc/100), MIN_CHARGE);
+  const paid = (parseFloat(document.getElementById('con-cash').value)||0) +
+               (parseFloat(document.getElementById('con-upi').value)||0) +
+               (parseFloat(document.getElementById('con-card').value)||0);
+  const balance = final - paid;
+
+  const modes = [];
+  if(parseFloat(document.getElementById('con-cash').value)>0) modes.push('Cash');
+  if(parseFloat(document.getElementById('con-upi').value)>0) modes.push('UPI');
+  if(parseFloat(document.getElementById('con-card').value)>0) modes.push('Card');
+
+  const invoiceNum = 'INV-' + Math.floor(Math.random()*9000+1000);
+
+  const sale = {
+    id: Date.now().toString(),
+    invoiceNumber: invoiceNum,
+    clientName: name,
+    phone,
+    tattooDesc: style,
+    height: h, width: w,
+    standardCost: standard,
+    discountPercent: disc,
+    totalCost: final,
+    amountPaid: paid,
+    balanceDue: balance,
+    paymentMode: modes.join('+') || 'Unknown',
+    date: new Date().toISOString()
+  };
+
+  DB.sales.unshift(sale);
+  saveToLocal();
+
+  // Show invoice preview
+  showInvoice(sale);
+  showToast('✅ Sale saved! Invoice generated.');
+}
+
+function showInvoice(sale) {
+  const el = document.getElementById('invoice-preview');
+  const date = new Date(sale.date).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'});
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="invoice-preview">
+      <div class="inv-header">
+        <div class="inv-title">INVOICE</div>
+        <div class="inv-sub">TATTOO CREATORS STUDIO</div>
+      </div>
+      <div class="inv-row"><span style="color:#999;font-size:11px">INVOICE #</span><span>${sale.invoiceNumber}</span></div>
+      <div class="inv-row"><span style="color:#999;font-size:11px">DATE</span><span>${date}</span></div>
+      <div class="inv-row"><span style="color:#999;font-size:11px">CLIENT</span><span><strong>${sale.clientName}</strong></span></div>
+      <div class="inv-row"><span style="color:#999;font-size:11px">PHONE</span><span>${sale.phone||'—'}</span></div>
+      <div style="height:12px"></div>
+      <div class="inv-row"><span>Professional Tattoo Session</span><span></span></div>
+      <div class="inv-row"><span style="color:#999;font-size:11px">Style: ${sale.tattooDesc} · ${sale.height}×${sale.width}"</span><span class="inv-total">₹${Math.round(sale.totalCost).toLocaleString('en-IN')}</span></div>
+      <div style="height:8px"></div>
+      <div class="inv-row"><span>Amount Paid</span><span style="color:green;font-weight:700">₹${Math.round(sale.amountPaid).toLocaleString('en-IN')}</span></div>
+      ${sale.balanceDue > 0 ? `<div class="inv-row"><span>Balance Due</span><span style="color:red;font-weight:700">₹${Math.round(sale.balanceDue).toLocaleString('en-IN')}</span></div>` : `<div class="inv-row"><span></span><span style="color:#FFC107;font-weight:700">✓ PAID IN FULL</span></div>`}
+      <div class="inv-promo">🎉 Show this invoice for 20% off on your next tattoo!</div>
+      <div style="text-align:center;margin-top:12px;color:#999;font-size:10px">Tattoo Creators · Viman Nagar, Pune · +91 96651 88935</div>
+    </div>
+    <button class="btn btn-dark" style="margin-top:12px" onclick="printInvoice()">🖨️ PRINT / SAVE PDF</button>
+  `;
+  el.scrollIntoView({behavior:'smooth'});
+}
+
+function printInvoice() {
+  window.print();
+}
+
+// ============================================================
+// SIGNATURE PAD
+// ============================================================
+function initSignaturePad() {
+  const canvas = document.getElementById('sig-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 340;
+  canvas.height = 150;
+
+  let drawing = false;
+  let lastX = 0, lastY = 0;
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return [src.clientX - rect.left, src.clientY - rect.top];
+  }
+
+  canvas.addEventListener('mousedown', e => { drawing=true; [lastX,lastY]=getPos(e); });
+  canvas.addEventListener('mousemove', e => {
+    if(!drawing) return;
+    const [x,y] = getPos(e);
+    ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(x,y);
+    ctx.strokeStyle='#2563eb'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.stroke();
+    [lastX,lastY]=[x,y];
+  });
+  canvas.addEventListener('mouseup', ()=>drawing=false);
+  canvas.addEventListener('touchstart', e=>{e.preventDefault();drawing=true;[lastX,lastY]=getPos(e);},{passive:false});
+  canvas.addEventListener('touchmove', e=>{
+    e.preventDefault();
+    if(!drawing) return;
+    const [x,y]=getPos(e);
+    ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);
+    ctx.strokeStyle='#2563eb';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+    [lastX,lastY]=[x,y];
+  },{passive:false});
+  canvas.addEventListener('touchend',()=>drawing=false);
+}
+
+function clearSig() {
+  const canvas = document.getElementById('sig-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+// ============================================================
+// REPORTS
+// ============================================================
+let currentFrame = 'month';
+
+function setReportFrame(f) {
+  currentFrame = f;
+  document.querySelectorAll('#report-segment .seg-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['day','week','month','all'][i] === f);
+  });
+  renderReports(f);
+}
+
+function getFilteredSales(f) {
+  const now = new Date();
+  return DB.sales.filter(s => {
+    const d = new Date(s.date);
+    if(f==='day') return d.toDateString() === now.toDateString();
+    if(f==='week') {
+      const start = new Date(now); start.setDate(now.getDate() - now.getDay());
+      return d >= start;
+    }
+    if(f==='month') return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    return true;
+  });
+}
+
+function renderReports(f) {
+  const sales = getFilteredSales(f);
+  const total = sales.reduce((s,x)=>s+x.amountPaid,0);
+  const avg = sales.length ? total/sales.length : 0;
+
+  document.getElementById('report-metrics').innerHTML = `
+    <div class="report-card"><div class="report-icon" style="color:var(--green)">₹</div><div class="report-value" style="color:var(--green)">₹${Math.round(total).toLocaleString('en-IN')}</div><div class="report-label">Total Revenue</div></div>
+    <div class="report-card"><div class="report-icon" style="color:var(--blue)">👥</div><div class="report-value" style="color:var(--blue)">${sales.length}</div><div class="report-label">Clients Served</div></div>
+    <div class="report-card"><div class="report-icon" style="color:var(--orange)">📊</div><div class="report-value" style="color:var(--orange)">₹${Math.round(avg).toLocaleString('en-IN')}</div><div class="report-label">Avg. Sale Value</div></div>
+    <div class="report-card"><div class="report-icon" style="color:var(--purple)">📅</div><div class="report-value" style="color:var(--purple);font-size:16px">${{day:'Today',week:'This Week',month:'This Month',all:'All Time'}[f]}</div><div class="report-label">Period</div></div>
+  `;
+
+  const el = document.getElementById('report-list');
+  if(sales.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div>No sales found</div></div>';
+    return;
+  }
+  el.innerHTML = sales.map(s => `
+    <div class="tx-row">
+      <div class="tx-icon">💰</div>
+      <div>
+        <div class="tx-name">${s.clientName}</div>
+        <div class="tx-desc">${s.tattooDesc} · ${s.height||'?'}×${s.width||'?'}" · ${s.paymentMode}</div>
+      </div>
+      <div class="tx-amount">
+        + ₹${Math.round(s.amountPaid).toLocaleString('en-IN')}
+        <div class="tx-date">${new Date(s.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function exportCSV() {
+  const sales = getFilteredSales(currentFrame);
+  if(!sales.length) { showToast('No data to export'); return; }
+  let csv = 'Date,Invoice,Client,Description,Size,Total,Paid,Mode\n';
+  sales.forEach(s => {
+    csv += `${new Date(s.date).toLocaleDateString()},${s.invoiceNumber},${s.clientName},${s.tattooDesc},${s.height}x${s.width},${s.totalCost},${s.amountPaid},${s.paymentMode}\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='StudioOS_Sales.csv'; a.click();
+  showToast('📤 CSV exported!');
+}
+
+// ============================================================
+// GALLERY
+// ============================================================
+function addGalleryImage(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    DB.gallery.unshift({ id: Date.now().toString(), data: e.target.result });
+    saveToLocal();
+    renderGallery();
+    showToast('📸 Photo added!');
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function renderGallery() {
+  const el = document.getElementById('gallery-grid');
+  if(!el) return;
+  if(DB.gallery.length === 0) {
+    el.innerHTML = '<div class="gallery-empty"><div class="gallery-empty-icon">📸</div><div>No images yet.<br>Tap + to add portfolio shots.</div></div>';
+    return;
+  }
+  el.innerHTML = DB.gallery.map(img => `
+    <div class="gallery-item" onclick="openImgOverlay('${img.id}')" oncontextmenu="deleteGalleryImg('${img.id}');return false;">
+      <img src="${img.data}" alt="portfolio" loading="lazy">
+    </div>
+  `).join('');
+}
+
+function openImgOverlay(id) {
+  const img = DB.gallery.find(x => x.id === id);
+  if(!img) return;
+  document.getElementById('overlay-img').src = img.data;
+  document.getElementById('img-overlay').classList.add('show');
+}
+
+function closeImgOverlay() {
+  document.getElementById('img-overlay').classList.remove('show');
+}
+
+function deleteGalleryImg(id) {
+  if(confirm('Delete this image?')) {
+    DB.gallery = DB.gallery.filter(x => x.id !== id);
+    saveToLocal();
+    renderGallery();
+  }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ============================================================
+// INIT ON LOAD
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // Show offline option after delay
+});
+</script>
+</body>
+</html>
